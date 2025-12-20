@@ -31,13 +31,19 @@ def generate():
         response = requests.post(url, json=payload)
         data = response.json()
         
-        if response.status_code != 200:
+        if response.status_code == 429:
+            return jsonify({'error': {'message': 'Rate limit exceeded. Please wait and try again.'}}), 429
+        elif response.status_code == 404:
+            return jsonify({'error': {'message': f'Model "{model}" not found. Try using gemini-1.5-flash instead.'}}), 404
+        elif response.status_code == 403:
+            return jsonify({'error': {'message': 'Invalid API key or insufficient permissions.'}}), 403
+        elif response.status_code != 200:
             return jsonify(data), response.status_code
         
         return jsonify(data)
     
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': {'message': str(e)}}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
